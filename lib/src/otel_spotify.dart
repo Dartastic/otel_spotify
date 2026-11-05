@@ -1,15 +1,16 @@
-// Licensed under the Dartastic Pro Software License Agreement.
+// Licensed under the Apache License, Version 2.0
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
-import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
+import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_spotify_suppression.dart';
 
 const _tracerName = 'dartastic_otel_libs_spotify';
 
-Tracer _tracer() => OTel.tracerProvider().getTracer(_tracerName);
+APITracer _tracer() => OTelAPI.tracerProvider().getTracer(_tracerName);
 
 class SpotifyResult {
+  /// Creates a result.
   const SpotifyResult({
     this.surface,
     this.market,
@@ -87,8 +88,13 @@ class SpotifyResult {
   final int? statusCode;
 }
 
+/// What a traced call returned: the value for the caller plus fields
+/// recorded on the span.
 class SpotifyCallResult<T> {
+  /// Creates a call result.
   const SpotifyCallResult({required this.value, this.result});
+
+  /// The value returned to the caller.
   final T value;
   final SpotifyResult? result;
 }
@@ -131,7 +137,7 @@ Future<T> tracedSpotify<T>({
   final span = _tracer().startSpan(
     'spotify $operation',
     kind: SpanKind.client,
-    attributes: OTel.attributesFromMap(m),
+    attributes: OTelAPI.attributesFromMap(m),
   );
   try {
     final r = await invoke();
@@ -139,85 +145,86 @@ Future<T> tracedSpotify<T>({
       final res = r.result!;
       final extras = <Attribute<Object>>[];
       if (res.surface != null) {
-        extras.add(OTel.attributeString('spotify.surface', res.surface!));
+        extras.add(OTelAPI.attributeString('spotify.surface', res.surface!));
       }
       if (res.market != null) {
-        extras.add(OTel.attributeString('spotify.market', res.market!));
+        extras.add(OTelAPI.attributeString('spotify.market', res.market!));
       }
       if (res.entityKind != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'spotify.entity.kind',
           res.entityKind!,
         ));
       }
       if (res.entityId != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'spotify.entity.id',
           res.entityId!,
         ));
       }
       if (res.entityName != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'spotify.entity.name',
           res.entityName!,
         ));
       }
       if (res.itemCount != null) {
-        extras.add(OTel.attributeInt('spotify.item.count', res.itemCount!));
+        extras.add(OTelAPI.attributeInt('spotify.item.count', res.itemCount!));
       }
       if (res.durationMs != null) {
-        extras.add(OTel.attributeInt('spotify.duration_ms', res.durationMs!));
+        extras
+            .add(OTelAPI.attributeInt('spotify.duration_ms', res.durationMs!));
       }
       if (res.shuffleState != null) {
-        extras.add(OTel.attributeBool(
+        extras.add(OTelAPI.attributeBool(
           'spotify.player.shuffle',
           res.shuffleState!,
         ));
       }
       if (res.repeatState != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'spotify.player.repeat',
           res.repeatState!,
         ));
       }
       if (res.deviceId != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'spotify.player.device.id',
           res.deviceId!,
         ));
       }
       if (res.deviceKind != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'spotify.player.device.kind',
           res.deviceKind!,
         ));
       }
       if (res.playbackState != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'spotify.player.state',
           res.playbackState!,
         ));
       }
       if (res.searchTypes != null) {
-        extras.add(OTel.attributeStringList(
+        extras.add(OTelAPI.attributeStringList(
           'spotify.search.types',
           res.searchTypes!,
         ));
       }
       if (res.searchTotal != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'spotify.search.total',
           res.searchTotal!,
         ));
       }
       if (res.scopesGranted != null) {
-        extras.add(OTel.attributeStringList(
+        extras.add(OTelAPI.attributeStringList(
           'spotify.scopes.granted',
           res.scopesGranted!,
         ));
       }
       if (res.requiredScopeMissing != null) {
-        extras.add(OTel.attributeBool(
+        extras.add(OTelAPI.attributeBool(
           'spotify.scope.missing',
           res.requiredScopeMissing!,
         ));
@@ -226,19 +233,19 @@ Future<T> tracedSpotify<T>({
         }
       }
       if (res.retryAfterSec != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'spotify.retry_after_sec',
           res.retryAfterSec!,
         ));
       }
       if (res.errorMessage != null) {
-        extras.add(OTel.attributeString(
+        extras.add(OTelAPI.attributeString(
           'spotify.error.message',
           res.errorMessage!,
         ));
       }
       if (res.statusCode != null) {
-        extras.add(OTel.attributeInt(
+        extras.add(OTelAPI.attributeInt(
           'http.response.status_code',
           res.statusCode!,
         ));
@@ -249,13 +256,13 @@ Future<T> tracedSpotify<T>({
           );
         }
       }
-      if (extras.isNotEmpty) span.addAttributes(OTel.attributes(extras));
+      if (extras.isNotEmpty) span.addAttributes(OTelAPI.attributes(extras));
     }
     return r.value;
   } catch (e, st) {
-    span.addAttributes(OTel.attributes([
-      OTel.attributeString(
-        ErrorResource.errorType.key,
+    span.addAttributes(OTelAPI.attributes([
+      OTelAPI.attributeString(
+        ErrorAttributes.errorType.key,
         e.runtimeType.toString(),
       ),
     ]));
